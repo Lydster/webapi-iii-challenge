@@ -4,6 +4,8 @@ const Users = require("./userDb.js");
 
 const router = express.Router();
 
+const { CapsPost, CapsPut } = require("./customMiddleware");
+
 //GET ALL
 
 router.get("/", async (req, res) => {
@@ -38,7 +40,7 @@ router.get("/:id", async (req, res) => {
 
 //ADD ONE
 
-router.post("/", async (req, res) => {
+router.post("/", CapsPost, async (req, res) => {
   try {
     if (req.body) {
       await Users.insert(req.body);
@@ -57,24 +59,22 @@ router.post("/", async (req, res) => {
 
 //UPDATE
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", CapsPut, async (req, res) => {
   try {
-    const user = await Users.getById(req.params.id);
-    const changes = await req.body.name;
-    console.log(user);
-    console.log(changes);
-    if (!changes) {
+    const { id } = req.params;
+    const updatedUser = await Users.update(id, req.body);
+
+    if (!updatedUser) {
       res
-        .status(400)
-        .json({ errorMessage: "Please provide a name to update." });
+        .status(404)
+        .json({ message: "The user you want to update does not exist." });
     } else {
-      Users.update(req.params.id, changes);
-      res.status(200).json(user);
+      res.status(200).json({ message: "update successful" });
     }
   } catch (error) {
     res
       .status(500)
-      .json({ error: "The user information could not up updated." });
+      .json({ message: "There was an error while updating that user" });
   }
 });
 
